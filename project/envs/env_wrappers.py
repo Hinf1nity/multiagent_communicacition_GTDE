@@ -4,7 +4,7 @@ Modified from OpenAI Baselines code to work with multi-agent envs
 import numpy as np
 from multiprocessing import Process, Pipe
 from abc import ABC, abstractmethod
-from GTDE.utils.util import tile_images
+from utils.util import tile_images
 
 
 class CloudpickleWrapper(object):
@@ -234,7 +234,6 @@ class ShareSubprocVecEnv(ShareVecEnv):
     def get_obs_own_feats_size(self):
         self.remotes[0].send(('get_obs_own_feats_size', None))
         return self.remotes[0].recv()
-
 
     def reset_task(self):
         for remote in self.remotes:
