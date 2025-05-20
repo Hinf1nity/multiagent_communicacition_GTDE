@@ -9,7 +9,7 @@ class MAPPOPolicy:
         self.lr = args.lr
         self.critic_lr = args.critic_lr
         self.opti_eps = args.opti_eps
-        self.wight_decay = args.wight_decay
+        self.weight_decay = args.weight_decay
 
         self.obs_space = obs_space
         self.share_obs_space = cent_obs_space
@@ -22,12 +22,12 @@ class MAPPOPolicy:
             self.actor.parameters(),
             lr=self.lr,
             eps=self.opti_eps,
-            weight_decay=self.wight_decay)
+            weight_decay=self.weight_decay)
         self.critic_optimizer = torch.optim.Adam(
             self.critic.parameters(),
             lr=self.critic_lr,
             eps=self.opti_eps,
-            weight_decay=self.wight_decay)
+            weight_decay=self.weight_decay)
 
     def lr_decay(self, episode, episodes):
         self.update_learning_rate(

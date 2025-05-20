@@ -6,11 +6,11 @@ from project.utils.valuenorm import ValueNorm
 from project.algorithms.utils.util import check
 
 
-class MAPPO(nn.Module):
+class MAPPO:
     def __init__(self, args, policy, device=torch.device("cpu")):
         self.device = device
         self.tpdv = dict(
-            float=torch.float32,
+            dtype=torch.float32,
             divece=device
         )
         self.policy = policy
@@ -76,7 +76,7 @@ class MAPPO(nn.Module):
         return value_loss
 
     def ppo_update(self, sample, update_actor=True):
-        share_obs_batch, obs_batch, rnn_states_batch, rnn_states_critic_batch, actions_batch, action_log_probs_batch, \
+        share_obs_batch, obs_batch, rnn_states_batch, rnn_states_critic_batch, actions_batch, \
             value_preds_batch, returns_batch, masks_batchs, active_masks_batch, old_action_log_probs_batch, \
             adv_targ, available_actions_batch = sample
 

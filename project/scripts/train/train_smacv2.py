@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.append("/home/hinfinity/Documents/smacv2")
+
 from project.envs.env_wrappers import ShareSubprocVecEnv, ShareDummyVecEnv
 from project.config import get_config
 import torch
@@ -6,9 +10,7 @@ import numpy as np
 import setproctitle
 import socket
 import wandb
-import os
-import sys
-sys.path.append("/home/user/Documents/project")
+
 
 """
 This script is used to train a model using the SMACv2 environment."""
@@ -20,7 +22,7 @@ def parse_smacv2_distribution(args):
         "n_units": int(units[0]),
         "n_enemies": int(units[1]),
         "start_positions": {
-            "dist_type": "surronded_and_reflect",
+            "dist_type": "surrounded_and_reflect",
             "p": 0.5,
             "map_x": 32,
             "map_y": 32,
@@ -126,6 +128,7 @@ def main(args):
     all_args = parse_args(args, parser)
 
     # cuda
+    print(torch.cuda.is_available())
     if all_args.cuda and torch.cuda.is_available():
         print("Choose to use GPU...")
         device = torch.device("cuda:0")
@@ -144,42 +147,6 @@ def main(args):
     if not run_dir.exists():
         os.makedirs(str(run_dir))
 
-    if all_args.wandb:
-        run = wandb.init(config=all_args,
-                         project=all_args.env_name,
-                         entity=all_args.user_name,
-                         notes=socket.gethostname(),
-                         name=str(all_args.algorithm_name) + "_" + str(all_args.experiment_name) +
-                         "_" + str(all_args.units) + "_seed" +
-                         str(all_args.seed),
-                         dir=str(run_dir),
-                         job_type="training",
-                         reinit=True,
-                         )
-        all_args = wandb.config
-    else:
-        if not run_dir.exists():
-            curr_run = 'run1'
-        else:
-            exst_run_nums = [int(str(folder.name).split('run')[
-                                 1]) for folder in run_dir.iterdir() if str(folder.name).startswith('run')]
-            if len(exst_run_nums) == 0:
-                curr_run = 'run1'
-            else:
-                curr_run = 'run%1' % (max(exst_run_nums) + 1)
-        run_dir = run_dir / curr_run
-        if not run_dir.exists():
-            os.makedirs(str(run_dir))
-
-    # set process name
-    setproctitle.setproctitle(str(all_args.algorithm_name) + "-" + str(all_args.env_name) +
-                              "-" + str(all_args.experiment_name) + "@" + str(all_args.user_name))
-
-    # set random seed
-    torch.manual_seed(all_args.seed)
-    torch.cuda.manual_seed_all(all_args.seed)
-    np.random.seed(all_args.seed)
-
     if all_args.algorithm_name in ["mappo", "ippo", "GTGE"]:
         from project.runner.onpolicy.smac_runner import SMACRunner as Runner
         if all_args.algorithm_name == "mappo":
@@ -197,43 +164,81 @@ def main(args):
             all_args.use_centralized_V = False
             all_args.use_mappo = False
             print("Using GTGE")
+    else:
+        raise NotImplementedError(
+            "Algorithm %s not supported" % all_args.algorithm_name)
+
+    if all_args.use_wandb:
+        print("Using wandb")
+        run = wandb.init(config=all_args,
+                         project=all_args.env_name,
+                         entity=all_args.user_name,
+                         notes=socket.gethostname(),
+                         name=str(all_args.algorithm_name) + "_" + str(all_args.experiment_name) +
+                         "_" + str(all_args.units) + "_seed" +
+                         str(all_args.seed),
+                         dir=str(run_dir),
+                         job_type="training",
+                         reinit=True,
+                         allow_val_change=True,
+                         )
+        all_args = wandb.config
+    else:
+        if not run_dir.exists():
+            curr_run = 'run1'
         else:
-            raise NotImplementedError(
-                "Algorithm %s not supported" % all_args.algorithm_name)
+            exst_run_nums = [int(str(folder.name).split('run')[
+                                 1]) for folder in run_dir.iterdir() if str(folder.name).startswith('run')]
+            if len(exst_run_nums) == 0:
+                curr_run = 'run1'
+            else:
+                curr_run = 'run%i' % (max(exst_run_nums) + 1)
+        run_dir = run_dir / curr_run
+        if not run_dir.exists():
+            os.makedirs(str(run_dir))
 
-        # env
-        envs = make_train_env(all_args)
-        eval_envs = make_eval_env(all_args) if all_args.eval else None
+    # set process name
+    setproctitle.setproctitle(str(all_args.algorithm_name) + "-" + str(all_args.env_name) +
+                              "-" + str(all_args.experiment_name) + "@" + str(all_args.user_name))
 
-        if all_args.env_name == "StarCraft2v2":
-            num_agents = parse_smacv2_distribution(all_args)["n_units"]
-        else:
-            raise ValueError("Environment %s not supported" %
-                             all_args.env_name)
+    # set random seed
+    torch.manual_seed(all_args.seed)
+    torch.cuda.manual_seed_all(all_args.seed)
+    np.random.seed(all_args.seed)
 
-        config = {
-            "all_args": all_args,
-            "envs": envs,
-            "eval_envs": eval_envs,
-            "num_agents": num_agents,
-            "device": device,
-            "run_dir": run_dir,
-        }
+    # env
+    envs = make_train_env(all_args)
+    eval_envs = make_eval_env(all_args) if all_args.use_eval else None
 
-        runner = Runner(config)
-        runner.run()
+    if all_args.env_name == "StarCraft2v2":
+        num_agents = parse_smacv2_distribution(all_args)["n_units"]
+    else:
+        raise ValueError("Environment %s not supported" %
+                            all_args.env_name)
 
-        # Post training evaluation
-        envs.close()
-        if all_args.use_eval and eval_envs is not envs:
-            eval_envs.close()
+    config = {
+        "all_args": all_args,
+        "envs": envs,
+        "eval_envs": eval_envs,
+        "num_agents": num_agents,
+        "device": device,
+        "run_dir": run_dir,
+    }
 
-        if all_args.wandb:
-            run.finish()
-        else:
-            runner.writter.export_scalars_to_json(
-                str(runner.log_dir + '/summary.json'))
-            runner.writter.close()
+    runner = Runner(config)
+    runner.run()
+
+    # Post training evaluation
+    envs.close()
+    if all_args.use_eval and eval_envs is not envs:
+        eval_envs.close()
+
+    if all_args.wandb:
+        run.finish()
+    else:
+        runner.writter.export_scalars_to_json(
+            str(runner.log_dir + '/summary.json'))
+        runner.writter.close()
 
 
 if __name__ == "__main__":

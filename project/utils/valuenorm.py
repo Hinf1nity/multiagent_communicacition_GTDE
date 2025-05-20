@@ -8,7 +8,7 @@ import torch.nn as nn
 class ValueNorm(nn.Module):
     """ Normalize a vector of observations - across the first norm_axes dimensions"""
 
-    def __init__(self, input_shape, norm_axes=1, beta=0.99999, per_element_update=False, epsilon=1e-5):
+    def __init__(self, input_shape, norm_axes=1, beta=0.99999, per_element_update=False, epsilon=1e-5, device=torch.device("cpu")):
         super(ValueNorm, self).__init__()
 
         self.input_shape = input_shape
@@ -17,8 +17,8 @@ class ValueNorm(nn.Module):
         self.beta = beta
         self.per_element_update = per_element_update
         self.tpdbv = dict(
-            float=torch.float32,
-            device=torch.device("cpu")
+            dtype=torch.float32,
+            device=device
         )
 
         self.running_mean = nn.Parameter(

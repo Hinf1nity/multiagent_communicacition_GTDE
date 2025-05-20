@@ -81,5 +81,4 @@ def main():
 
 
 if __name__ == "__main__":
-    weave.init('smac_v2_test')
     main()

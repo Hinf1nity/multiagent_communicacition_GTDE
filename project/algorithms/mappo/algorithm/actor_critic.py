@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from project.algorithms.utils.util import init, check
-from project.utils.util import get_shape_from_space
+from project.utils.util import get_shape_from_obs_space
 from project.algorithms.utils.mlp import MLPBase
 from project.algorithms.utils.rnn import RNNLayer
 from project.algorithms.utils.act import ACTLayer
@@ -19,7 +19,7 @@ class Actor(nn.Module):
         self._recurrent_N = args.recurrent_N
         self.tpdv = dict(dtype=torch.float32, device=device)
 
-        obs_shape = get_shape_from_space(obs_space)
+        obs_shape = get_shape_from_obs_space(obs_space)
         self.base = MLPBase(args, obs_shape)
         self.rnn = RNNLayer(self.hidden_size, self.hidden_size, self._recurrent_N,
                             self._use_orthogonal)
@@ -71,7 +71,7 @@ class Critic(nn.Module):
         self.tpdv = dict(dtype=torch.float32, device=device)
         init_method = [nn.init.xavier_uniform_,
                        nn.init.orthogonal_][self._use_orthogonal]
-        cent_obs_shape = get_shape_from_space(cent_obs_space_)
+        cent_obs_shape = get_shape_from_obs_space(cent_obs_space_)
         self.base = MLPBase(args, cent_obs_shape)
         self.rnn = RNNLayer(self.hidden_size, self.hidden_size, self._recurrent_N,
                             self._use_orthogonal)
