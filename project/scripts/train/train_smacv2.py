@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append("/home/hinfinity/Documents/smacv2")
+sys.path.append("/home/hinfinity/Documents/multiagent_communicacition_GTDE")
 
 from project.envs.env_wrappers import ShareSubprocVecEnv, ShareDummyVecEnv
 from project.config import get_config
@@ -151,7 +151,7 @@ def main(args):
         from project.runner.onpolicy.smac_runner import SMACRunner as Runner
         if all_args.algorithm_name == "mappo":
             all_args.use_GTGE = False
-            all_args.use_centralized_V = False
+            all_args.use_centralized_V = True
             all_args.use_mappo = True
             print("Using MAPPO")
         elif all_args.algorithm_name == "ippo":

@@ -11,7 +11,7 @@ class MAPPO:
         self.device = device
         self.tpdv = dict(
             dtype=torch.float32,
-            divece=device
+            device=device
         )
         self.policy = policy
 
@@ -37,7 +37,7 @@ class MAPPO:
         if self._use_popart:
             self.value_normalizer = self.policy.critic.v_out
         elif self._use_valuenorm:
-            self.value_normalizer = ValueNorm(1).to(self.device)
+            self.value_normalizer = ValueNorm(1, device=self.device)
         else:
             self.value_normalizer = None
 
@@ -156,7 +156,7 @@ class MAPPO:
             advantages = buffer.returns[:-1] - buffer.value_preds[:-1]
 
         advantages_copy = advantages.copy()
-        advantages_copy[buffer.masks[:-1] == 0.0] = np.nan
+        advantages_copy[buffer.active_masks[:-1] == 0.0] = np.nan
         mean_advantages = np.nanmean(advantages_copy)
         std_advantages = np.nanstd(advantages_copy)
         advantages = (advantages - mean_advantages) / (std_advantages + 1e-5)

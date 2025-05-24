@@ -89,6 +89,7 @@ class Runner(object):
             self.restore(self.model_dir)
 
         # algorithm
+        print("#######################",self.device)
         self.trainer = TrainAlgo(
             self.all_args, self.policy, device=self.device)
         # buffer

@@ -224,7 +224,7 @@ class SMACRunner(Runner):
                 ((eval_dones_env == True).sum(), self.num_agents, 1), dtype=np.float32)
 
             for eval_i in range(self.n_eval_rollout_threads):
-                if eval_infos[eval_i]:
+                if eval_dones_env[eval_i]:
                     eval_episode += 1
                     eval_episode_rewards.append(
                         np.sum(one_episode_rewards, axis=0))
