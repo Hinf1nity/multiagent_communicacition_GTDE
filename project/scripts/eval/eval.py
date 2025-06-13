@@ -1,16 +1,16 @@
 #!/usr/bin/env python
+import setproctitle
+import numpy as np
+import torch
+from project.config import get_config
+from project.scripts.train.train_smacv2 import parse_smacv2_distribution, make_eval_env, parse_args
+from project.algorithms.mappo.mappo import MAPPO as TrainAlgo
+from project.algorithms.mappo.algorithm.MAPPOPolicy import MAPPOPolicy as Policy
 import os
 import sys
 
 sys.path.append("/home/hinfinity/Documents/multiagent_communicacition_GTDE")
 
-from project.algorithms.mappo.algorithm.MAPPOPolicy import MAPPOPolicy as Policy
-from project.algorithms.mappo.mappo import MAPPO as TrainAlgo
-from project.scripts.train.train_smacv2 import parse_smacv2_distribution, make_eval_env, parse_args
-from project.config import get_config
-import torch
-import numpy as np
-import setproctitle
 
 """eval script for SMACV2."""
 
@@ -116,7 +116,7 @@ def main(args):
     eval_envs = make_eval_env(all_args)
     num_agents = parse_smacv2_distribution(all_args)['n_units']
 
-    if all_args.algorithm_name in ["mappo", "ippo", "GTGE"]:
+    if all_args.algorithm_name in ["mappo", "ippo", "GTDE"]:
         if all_args.algorithm_name == "mappo":
             all_args.use_GTDE = False
             all_args.use_centralized_V = True
@@ -125,10 +125,10 @@ def main(args):
             all_args.use_GTDE = False
             all_args.use_centralized_V = False
             print("u are choosing to use ippo")
-        elif all_args.algorithm_name == "GTGE":
+        elif all_args.algorithm_name == "GTDE":
             all_args.use_GTDE = True
             all_args.use_centralized_V = False
-            print("u are choosing to use GTGE")
+            print("u are choosing to use GTDE")
     else:
         raise NotImplementedError
 

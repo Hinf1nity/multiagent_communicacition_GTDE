@@ -152,7 +152,7 @@ def get_config():
 
     # prepare parameters
     parser.add_argument("--algorithm_name", type=str,
-                        default='mappo', choices=["mappo", "ippo", "mappojo", "GTGE", "GTGEu", "GTGEkl"])
+                        default='mappo', choices=["mappo", "ippo", "mappojo", "GTDE", "GTDEu", "GTDEkl"])
 
     parser.add_argument("--experiment_name", type=str, default="check",
                         help="an identifier to distinguish different experiment.")

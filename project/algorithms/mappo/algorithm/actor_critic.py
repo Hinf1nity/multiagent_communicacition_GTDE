@@ -88,7 +88,7 @@ class Critic(nn.Module):
         if self._use_GTDE:
             self.GAT = GAT(self.hidden_size, self._GAT_dim,
                            self.hidden_size, self._attention_head)
-            self.link = Link(args, self.hidden_size)
+            self.link = Link(args, cent_obs_space_, self.hidden_size)
             if self._use_popart:
                 self.v_out = init_(
                     PopArt(self.hidden_size + self.ally_features[0] + 1, 1, device=device))

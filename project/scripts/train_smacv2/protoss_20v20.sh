@@ -1,4 +1,7 @@
 #!/bin/bash
+export SC2PATH='/workspace/multiagent_communicacition_GTDE/3rdparty/StarCraftII'
+export MAP_DIR="$SC2PATH/Maps/"
+
 env="StarCraft2v2"
 map="10gen_protoss"
 algo="GTDE"
