@@ -6,6 +6,8 @@ from project.algorithms.utils.mlp import MLPBase
 from project.algorithms.utils.rnn import RNNLayer
 from project.algorithms.utils.act import ACTLayer
 from project.algorithms.utils.popart import PopArt
+from project.algorithms.utils.gat import GAT
+from project.algorithms.utils.link import Link
 
 
 class Actor(nn.Module):
@@ -68,10 +70,14 @@ class Critic(nn.Module):
         self._use_orthogonal = args.use_orthogonal
         self._recurrent_N = args.recurrent_N
         self._use_popart = args.use_popart
+        self._use_GTDE = args.use_GTDE
+        self._GAT_dim = args.gat_dim
+        self._attention_head = args.attention_head
         self.tpdv = dict(dtype=torch.float32, device=device)
         init_method = [nn.init.xavier_uniform_,
                        nn.init.orthogonal_][self._use_orthogonal]
         cent_obs_shape = get_shape_from_obs_space(cent_obs_space_)
+        self.ally_features = cent_obs_space_[1]
         self.base = MLPBase(args, cent_obs_shape)
         self.rnn = RNNLayer(self.hidden_size, self.hidden_size, self._recurrent_N,
                             self._use_orthogonal)
@@ -79,10 +85,21 @@ class Critic(nn.Module):
         def init_(m):
             return init(m, init_method, lambda x: nn.init.constant_(x, 0))
 
-        if self._use_popart:
-            self.v_out = init_(PopArt(self.hidden_size, 1, device=device))
+        if self._use_GTDE:
+            self.GAT = GAT(self.hidden_size, self._GAT_dim,
+                           self.hidden_size, self._attention_head)
+            self.link = Link(args, self.hidden_size)
+            if self._use_popart:
+                self.v_out = init_(
+                    PopArt(self.hidden_size + self.ally_features[0] + 1, 1, device=device))
+            else:
+                self.v_out = init_(
+                    nn.Linear(self.hidden_size + self.ally_features[0] + 1, 1))
         else:
-            self.v_out = init_(nn.Linear(self.hidden_size, 1))
+            if self._use_popart:
+                self.v_out = init_(PopArt(self.hidden_size, 1, device=device))
+            else:
+                self.v_out = init_(nn.Linear(self.hidden_size, 1))
 
         self.to(device)
 
@@ -93,5 +110,16 @@ class Critic(nn.Module):
         critic_features = self.base(cent_obs)
         critic_features, rnn_states = self.rnn(
             critic_features, rnn_states, masks)
+        if self._use_GTDE:
+            edge_matrix = self.link(critic_features.detach())
+
+            critic_features = critic_features.reshape(
+                -1, (self.ally_features[0] + 1), critic_features.shape[-1])
+            critic_features = self.GAT(critic_features,
+                                       edge_matrix.reshape(-1, (self.ally_features[0] + 1),
+                                                           (self.ally_features[
+                                                               0] + 1)).detach())
+            critic_features = torch.cat(
+                [critic_features.reshape(-1, critic_features.shape[-1]), edge_matrix], dim=-1)
         value = self.v_out(critic_features)
         return value, rnn_states

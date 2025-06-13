@@ -3,13 +3,14 @@ import os
 import sys
 
 sys.path.append("/home/hinfinity/Documents/multiagent_communicacition_GTDE")
-import setproctitle
-import numpy as np
-import torch
-from project.config import get_config
-from project.scripts.train.train_smacv2 import parse_smacv2_distribution, make_eval_env, parse_args
-from project.algorithms.mappo.mappo import MAPPO as TrainAlgo
+
 from project.algorithms.mappo.algorithm.MAPPOPolicy import MAPPOPolicy as Policy
+from project.algorithms.mappo.mappo import MAPPO as TrainAlgo
+from project.scripts.train.train_smacv2 import parse_smacv2_distribution, make_eval_env, parse_args
+from project.config import get_config
+import torch
+import numpy as np
+import setproctitle
 
 """eval script for SMACV2."""
 
@@ -42,7 +43,8 @@ def eval_mode(config, index, path):
     eval_obs, eval_share_obs, eval_available_actions = eval_envs.reset()
     eval_rnn_states = np.zeros((args.n_eval_rollout_threads, num_agents, args.recurrent_N, args.hidden_size),
                                dtype=np.float32)
-    eval_masks = np.ones((args.n_eval_rollout_threads, num_agents, 1), dtype=np.float32)
+    eval_masks = np.ones((args.n_eval_rollout_threads,
+                         num_agents, 1), dtype=np.float32)
     while True:
         eval_actions, eval_rnn_states = \
             trainer.policy.act(np.concatenate(eval_obs),
@@ -50,8 +52,10 @@ def eval_mode(config, index, path):
                                np.concatenate(eval_masks),
                                np.concatenate(eval_available_actions),
                                deterministic=True)
-        eval_actions = np.array(np.split(_t2n(eval_actions), args.n_eval_rollout_threads))
-        eval_rnn_states = np.array(np.split(_t2n(eval_rnn_states), args.n_eval_rollout_threads))
+        eval_actions = np.array(
+            np.split(_t2n(eval_actions), args.n_eval_rollout_threads))
+        eval_rnn_states = np.array(
+            np.split(_t2n(eval_rnn_states), args.n_eval_rollout_threads))
 
         # Obser reward and next obs
         eval_obs, eval_share_obs, _, eval_dones, eval_infos, eval_available_actions = eval_envs.step(
@@ -61,7 +65,8 @@ def eval_mode(config, index, path):
         eval_rnn_states[eval_dones_env == True] = np.zeros(
             ((eval_dones_env == True).sum(), num_agents, args.recurrent_N, args.hidden_size), dtype=np.float32)
 
-        eval_masks = np.ones((args.n_eval_rollout_threads, num_agents, 1), dtype=np.float32)
+        eval_masks = np.ones((args.n_eval_rollout_threads,
+                             num_agents, 1), dtype=np.float32)
         eval_masks[eval_dones_env == True] = np.zeros(((eval_dones_env == True).sum(), num_agents, 1),
                                                       dtype=np.float32)
 
@@ -74,7 +79,8 @@ def eval_mode(config, index, path):
         if eval_episode >= args.eval_episodes:
             eval_win_rate = eval_battles_won / eval_episode
             print("eval win rate is {}.".format(eval_win_rate))
-            np.save(args.model_dir + "/evals/" +args.algorithm_name + "_eval_win_rate" + f"_{index}_{args.seed}" + ".npy", eval_win_rate)
+            np.save(args.model_dir + "/evals/" + args.algorithm_name +
+                    "_eval_win_rate" + f"_{index}_{args.seed}" + ".npy", eval_win_rate)
             eval_envs.save_replay()
             break
 
@@ -112,15 +118,15 @@ def main(args):
 
     if all_args.algorithm_name in ["mappo", "ippo", "GTGE"]:
         if all_args.algorithm_name == "mappo":
-            all_args.use_GTGE = False
+            all_args.use_GTDE = False
             all_args.use_centralized_V = True
             print("u are choosing to use mappo")
         elif all_args.algorithm_name == "ippo":
-            all_args.use_GTGE = False
+            all_args.use_GTDE = False
             all_args.use_centralized_V = False
             print("u are choosing to use ippo")
         elif all_args.algorithm_name == "GTGE":
-            all_args.use_GTGE = True
+            all_args.use_GTDE = True
             all_args.use_centralized_V = False
             print("u are choosing to use GTGE")
     else:
@@ -134,8 +140,8 @@ def main(args):
     }
     all_args.model_dir = "/home/hinfinity/Documents/multiagent_communicacition_GTDE/project/scripts/results/StarCraft2v2/10gen_protoss/ippo/protoss/wandb"
     path = [os.path.join(all_args.model_dir, i, "files", "actor.pt")
-        for i in os.listdir(all_args.model_dir)
-        if i.startswith("run") and os.path.isdir(os.path.join(all_args.model_dir, i))]
+            for i in os.listdir(all_args.model_dir)
+            if i.startswith("run") and os.path.isdir(os.path.join(all_args.model_dir, i))]
     for i, j in enumerate(path):
         eval_mode(config, i, j)
 

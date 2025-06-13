@@ -1,7 +1,3 @@
-import os
-import sys
-sys.path.append("/home/hinfinity/Documents/multiagent_communicacition_GTDE")
-
 from project.envs.env_wrappers import ShareSubprocVecEnv, ShareDummyVecEnv
 from project.config import get_config
 import torch
@@ -10,6 +6,9 @@ import numpy as np
 import setproctitle
 import socket
 import wandb
+import os
+import sys
+sys.path.append("/home/hinfinity/Documents/multiagent_communicacition_GTDE")
 
 
 """
@@ -147,23 +146,20 @@ def main(args):
     if not run_dir.exists():
         os.makedirs(str(run_dir))
 
-    if all_args.algorithm_name in ["mappo", "ippo", "GTGE"]:
+    if all_args.algorithm_name in ["mappo", "ippo", "GTDE"]:
         from project.runner.onpolicy.smac_runner import SMACRunner as Runner
         if all_args.algorithm_name == "mappo":
-            all_args.use_GTGE = False
+            all_args.use_GTDE = False
             all_args.use_centralized_V = True
-            all_args.use_mappo = True
             print("Using MAPPO")
         elif all_args.algorithm_name == "ippo":
-            all_args.use_GTGE = False
+            all_args.use_GTDE = False
             all_args.use_centralized_V = False
-            all_args.use_mappo = False
             print("Using IPPO")
-        elif all_args.algorithm_name == "GTGE":
-            all_args.use_GTGE = True
+        elif all_args.algorithm_name == "GTDE":
+            all_args.use_GTDE = True
             all_args.use_centralized_V = False
-            all_args.use_mappo = False
-            print("Using GTGE")
+            print("Using GTDE")
     else:
         raise NotImplementedError(
             "Algorithm %s not supported" % all_args.algorithm_name)
@@ -180,7 +176,6 @@ def main(args):
                          dir=str(run_dir),
                          job_type="training",
                          reinit=True,
-                         allow_val_change=True,
                          )
         all_args = wandb.config
     else:
@@ -214,7 +209,7 @@ def main(args):
         num_agents = parse_smacv2_distribution(all_args)["n_units"]
     else:
         raise ValueError("Environment %s not supported" %
-                            all_args.env_name)
+                         all_args.env_name)
 
     config = {
         "all_args": all_args,

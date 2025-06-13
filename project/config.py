@@ -191,7 +191,7 @@ def get_config():
     # network parameters
     parser.add_argument("--use_centralized_V", action='store_false',
                         default=True, help="Whether to use centralized V function")
-    parser.add_argument("--use_GTGE", action='store_false',
+    parser.add_argument("--use_GTDE", action='store_false',
                         default=True, help="Whether to use group CTDE")
 
     parser.add_argument("--stacked_frames", type=int, default=1,
@@ -303,7 +303,6 @@ def get_config():
     parser.add_argument("--train_maps", type=str, nargs='+', default=None)
     parser.add_argument("--eval_maps", type=str, nargs='+', default=None)
 
-    parser.add_argument("--use_mappo", action='store_true', default=False)
     parser.add_argument("--attention_head", type=int, default=4)
     parser.add_argument("--link_dim", type=int, default=64)
     parser.add_argument("--gat_dim", type=int, default=64)
