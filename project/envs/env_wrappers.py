@@ -297,7 +297,7 @@ class ShareDummyVecEnv(ShareVecEnv):
                 env.render(mode=mode)
         else:
             raise NotImplementedError
-        
+
     def save_replay(self):
         for env in self.envs:
             env.save_replay()

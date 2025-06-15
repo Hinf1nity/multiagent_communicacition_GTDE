@@ -228,7 +228,7 @@ def main(args):
     if all_args.use_eval and eval_envs is not envs:
         eval_envs.close()
 
-    if all_args.wandb:
+    if all_args.use_wandb:
         run.finish()
     else:
         runner.writter.export_scalars_to_json(

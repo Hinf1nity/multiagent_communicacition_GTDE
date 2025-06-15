@@ -7,8 +7,9 @@ units="20v20"
 exp="protoss"
 seed_max=1
 
-export SC2PATH='/workspace/3rdparty/StarCraftII'
+export SC2PATH='/workspace/multiagent_communicacition_GTDE/3rdparty/StarCraftII'
 export MAP_DIR="$SC2PATH/Maps/"
+
 echo "env is ${env}, map is ${map}, algo is ${algo}, exp is ${exp}, max seed is ${seed_max}"
 for seed in `seq ${seed_max}`;
 do
